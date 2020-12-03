@@ -58,8 +58,9 @@ def tensor_to_image(tensor):
 
 hub_model = hub.load('https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2')
 print('loaded model')
-style_path = '/Users/christina.bukas/Downloads/trippy-cells-biology-green-wallpaper-thumb.jpg'
+style_path = 'pocimage.jpg'
 style_image = load_img(style_path)
+style_image = tf.stack([style_image[:,:,:,2],style_image[:,:,:,1],style_image[:,:,:,0]],axis = 3)
 
 cap = cv2.VideoCapture(0)
 while(True):
@@ -67,7 +68,10 @@ while(True):
     ret, frame = cap.read()
 
     # Our operations on the frame come here
-    #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+
     content_image = prepare_img(frame)
     stylized_image = hub_model(tf.constant(content_image), tf.constant(style_image))[0]
     new_img = tensor_to_image(stylized_image)
