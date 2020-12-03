@@ -1,0 +1,5 @@
+pip install tensorflow
+pip install --upgrade tensorflow-hub
+conda install -c anaconda opencv
+conda install -c conda-forge matplotlib
+conda install -c anaconda pillow
