@@ -1,5 +1,6 @@
 
 import os
+import argparse
 import tensorflow as tf
 import tensorflow_hub as hub
 # Load compressed models from tensorflow_hub
@@ -60,10 +61,15 @@ def tensor_to_image(tensor):
     tensor = tensor[0]
   return tensor #PIL.Image.fromarray(tensor)
 
+def get_args():
+    parser = argparse.ArgumentParser(description='ArtsyML')
+    parser.add_argument('--style_img', default='./pocimage.jpg')
+    return parser.parse_args()
 
 if __name__ == '__main__':
 
-  style_path = 'pocimage.jpg'
+  args = get_args()
+  style_path = args.style_img
   style_image = load_img(style_path)
   style_image = tf.stack([style_image[:,:,:,2],style_image[:,:,:,1],style_image[:,:,:,0]],axis = 3)
 
