@@ -11,9 +11,9 @@ import matplotlib as mpl
 mpl.rcParams['figure.figsize'] = (12,12)
 mpl.rcParams['axes.grid'] = False
 import numpy as np
-import time
 import functools
 import cv2
+import time
 
 import torch
 from torchvision.models.segmentation import deeplabv3_resnet101
@@ -91,40 +91,46 @@ if __name__ == '__main__':
 
   print('loaded model')
   cap = cv2.VideoCapture(0)
+  prev_capture = time.time()
   while(True):
-      # Capture frame-by-frame
-      ret, frame = cap.read()
-      
-      # Preparing the frame for the style net
-      content_image = prepare_img(frame)
-      style_image_tensor = style_model(tf.constant(content_image), tf.constant(style_image))[0]
-      style_img = tensor_to_image(style_image_tensor)
 
-      # Preparing the frame for the segmentation net 
-      # resize to same shape as output of style net
-      frame = cv2.resize(frame, (style_img.shape[1], style_img.shape[0]))
-      input_tensor = preprocess(frame)
-      # create a mini-batch as expected by the model
-      input_batch = input_tensor.unsqueeze(0)
-      input_batch = input_batch.to(device=device)
-      
-      with torch.no_grad():
-          seg_output = seg_model(input_batch)['out'][0]
-          seg_output_predictions = seg_output.detach().argmax(0)
+    capture_time = time.time()
+    print('Time between captures: ', capture_time - prev_capture)
+    prev_capture = capture_time
 
-      # edit segmentation mask to binary to keep people only
-      seg_mask =  seg_output_predictions.cpu().numpy() 
-      seg_mask[seg_mask!=15] = 0
-      seg_mask[seg_mask==15] = 1
+    # Capture frame-by-frame
+    ret, frame = cap.read()
+    
+    # Preparing the frame for the style net
+    content_image = prepare_img(frame)
+    style_image_tensor = style_model(tf.constant(content_image), tf.constant(style_image))[0]
+    style_img = tensor_to_image(style_image_tensor)
+    
+    # Preparing the frame for the segmentation net 
+    # resize to same shape as output of style net
+    frame = cv2.resize(frame, (style_img.shape[1], style_img.shape[0]))
+    input_tensor = preprocess(frame)
+    # create a mini-batch as expected by the model
+    input_batch = input_tensor.unsqueeze(0)
+    input_batch = input_batch.to(device=device)
+    
+    with torch.no_grad():
+        seg_output = seg_model(input_batch)['out'][0]
+        seg_output_predictions = seg_output.detach().argmax(0)
 
-      # keep people only from style image and background only from original frame
-      style_img =  (1-seg_mask[:,:,None])*frame + seg_mask[:,:,None]*style_img
-      style_img = style_img.astype(np.uint8)
+    # edit segmentation mask to binary to keep people only
+    seg_mask =  seg_output_predictions.cpu().numpy() 
+    seg_mask[seg_mask!=15] = 0
+    seg_mask[seg_mask==15] = 1
 
-      # Display the resulting frame
-      cv2.imshow('Style Transfer',style_img)
-      if cv2.waitKey(1) & 0xFF == ord('q'):
-          break
+    # keep people only from style image and background only from original frame
+    style_img =  (1-seg_mask[:,:,None])*frame + seg_mask[:,:,None]*style_img
+    style_img = style_img.astype(np.uint8)
+    
+    # Display the resulting frame
+    cv2.imshow('Style Transfer', style_img)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
   # When everything done, release the capture
   cap.release()
   cv2.destroyAllWindows()
