@@ -135,7 +135,8 @@ if __name__ == '__main__':
         print('Time for segmentation model: ', tok-tik)
 
         # edit segmentation mask to binary to keep people only
-        seg_mask =  seg_output_predictions.cpu().numpy() 
+        seg_mask =  seg_output_predictions.cpu().data.numpy() 
+        print(seg_mask.dtype)
         tik = time.time()
         print('Time for seg to cpu: ', tik-tok)
         seg_mask[seg_mask!=15] = 0
@@ -147,11 +148,12 @@ if __name__ == '__main__':
         
         tok = time.time()
         print('Time for rest: ', tok-tik)
+        print(' ')
 
         # Display the resulting frame
 #         cv2.imshow('Style Transfer', style_img)
 #         if cv2.waitKey(1) & 0xFF == ord('q'):
 #             break
     # When everything done, release the capture
-    cap.release()
-    cv2.destroyAllWindows()
+    #cap.release()
+    #cv2.destroyAllWindows()
