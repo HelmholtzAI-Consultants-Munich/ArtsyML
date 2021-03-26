@@ -62,7 +62,7 @@ def tensor_to_image(tensor):
 
 def get_args():
     parser = argparse.ArgumentParser(description='ArtsyML')
-    parser.add_argument('--style_img', default='./pocimage.jpg')
+    parser.add_argument('--style_img', default='/home/haicu/ruolin.shen/projects/ArtsyML/pocimage.jpg')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     style_model = tfhub.load('https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2')
     #style_model = Net(ngf=128)
     #style_model.load_state_dict(torch.load('21styles.model'))
-#     print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+    print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 
     preprocess = transforms.Compose([
       transforms.ToTensor(),
@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
     print('loaded model')
     #   cap = cv2.VideoCapture(0)
-    arr = np.load('video.npy')
+    arr = np.load('/home/haicu/ruolin.shen/projects/ArtsyML/video.npy')
     prev_capture = time.time()
     for i in range(10):
 
