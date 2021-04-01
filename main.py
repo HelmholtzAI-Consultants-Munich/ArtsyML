@@ -62,17 +62,17 @@ def grab(cam, queue, width, height, fps):
     capture.set(cv2.CAP_PROP_FRAME_WIDTH, width)
     capture.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
     capture.set(cv2.CAP_PROP_FPS, fps)
+    while(True):
+        while(running):
+            frame = {}        
+            capture.grab()
+            retval, img = capture.retrieve(0)
+            frame["img"] = img
 
-    while(running):
-        frame = {}        
-        capture.grab()
-        retval, img = capture.retrieve(0)
-        frame["img"] = img
-
-        if queue.qsize() < 10:
-            queue.put(frame)
-        else:
-            print(queue.qsize())
+            if queue.qsize() < 10:
+                queue.put(frame)
+            else:
+                print(queue.qsize())
 
 def prepare_img(img):
   max_dim = 512
@@ -124,7 +124,10 @@ class MyWindowClass(QtWidgets.QMainWindow, form_class):
         self.setupUi(self)
 
         self.startButton.clicked.connect(self.start_clicked)
-        
+        self.screenshotButton.setStyleSheet("border-image : url(./images_gui/imagesRound.jpg);")
+        self.screenshotButton.clicked.connect(self.takeScreenshot)
+        self.screenshotButton.hide()
+
         self.window_width = self.ImgWidget.frameSize().width()
         self.window_height = self.ImgWidget.frameSize().height()
         self.ImgWidget = OwnImageWidget(self.ImgWidget)       
@@ -133,17 +136,17 @@ class MyWindowClass(QtWidgets.QMainWindow, form_class):
         self.timer.timeout.connect(self.update_frame)
         self.timer.start(1)
 
-        self.styleImg = load_img('style3.jpg') # default style
+        self.styleImg = load_img('./images_style/style3.jpg') # default style
         self.styleImg = tf.stack([self.styleImg[:,:,:,2],self.styleImg[:,:,:,1],self.styleImg[:,:,:,0]],axis = 3)
         
         self.styleImgButton1.clicked.connect(self.setStyle1)
-        self.styleImgButton1.setStyleSheet("border-image : url(style1.jpg);")
+        self.styleImgButton1.setStyleSheet("border-image : url(./images_style/style1.jpg);")
         
         self.styleImgButton2.clicked.connect(self.setStyle2)
-        self.styleImgButton2.setStyleSheet("border-image : url(style2.jpg);")
+        self.styleImgButton2.setStyleSheet("border-image : url(./images_style/style2.jpg);")
 
         self.styleImgButton3.clicked.connect(self.setStyle3)
-        self.styleImgButton3.setStyleSheet("border-image : url(style3.jpg);")
+        self.styleImgButton3.setStyleSheet("border-image : url(./images_style/style3.jpg);")
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print('DEVICE', self.device )
@@ -159,24 +162,37 @@ class MyWindowClass(QtWidgets.QMainWindow, form_class):
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
     
+    def takeScreenshot(self):
+        mpl.image.imsave('screenshot.png', self.img)
+    
     def setStyle1(self):
-        self.styleImg = load_img('style1.jpg')
+        self.styleImg = load_img('./images_style/style1.jpg')
         self.styleImg = tf.stack([self.styleImg[:,:,:,2],self.styleImg[:,:,:,1],self.styleImg[:,:,:,0]],axis = 3)
 
     def setStyle2(self):
-        self.styleImg = load_img('style2.jpg')
+        self.styleImg = load_img('./images_style/style2.jpg')
         self.styleImg = tf.stack([self.styleImg[:,:,:,2],self.styleImg[:,:,:,1],self.styleImg[:,:,:,0]],axis = 3)
 
     def setStyle3(self):
-        self.styleImg = load_img('style3.jpg')
+        self.styleImg = load_img('./images_style/style3.jpg')
         self.styleImg = tf.stack([self.styleImg[:,:,:,2],self.styleImg[:,:,:,1],self.styleImg[:,:,:,0]],axis = 3)
 
     def start_clicked(self):
         global running
-        running = True
-        capture_thread.start()
-        self.startButton.setEnabled(False)
-        self.startButton.setText('Starting...')
+        if self.startButton.text() == 'Start video':
+            running = True
+            self.screenshotButton.show()
+            if capture_thread.is_alive():
+                self.screenshotButton.show()
+            else:
+                capture_thread.start()
+            self.startButton.setEnabled(False)
+            self.startButton.setText('Starting...')
+        elif self.startButton.text() == 'Stop video':
+            running = False
+            self.screenshotButton.hide()
+            self.ImgWidget.hide()
+            self.startButton.setText('Start video')
 
     def get_stylized(self, frame):
         # Preparing the frame for the style net
@@ -197,7 +213,7 @@ class MyWindowClass(QtWidgets.QMainWindow, form_class):
             seg_output = seg_output.detach().argmax(0)
 
         # edit segmentation mask to binary to keep people only
-        seg_mask =  seg_output.cpu().data().numpy() 
+        seg_mask = seg_output.cpu().data.numpy() 
         seg_mask[seg_mask!=15] = 0
         seg_mask[seg_mask==15] = 1
 
@@ -208,20 +224,22 @@ class MyWindowClass(QtWidgets.QMainWindow, form_class):
 
     def update_frame(self):
         if not q.empty():
-            self.startButton.setText('Camera is live')
+            self.startButton.setEnabled(True)
+            self.startButton.setText('Stop video')
             frame = q.get()
             img = frame["img"]
+            # style transfer and segmentation
+            self.img = self.get_stylized(img)
 
-            img_height, img_width, img_colors = img.shape
+            img_height, img_width, img_colors = self.img.shape
             scale_w = float(self.window_width) / float(img_width)
             scale_h = float(self.window_height) / float(img_height)
             scale = min([scale_w, scale_h])
 
             if scale == 0:
                 scale = 1
-            # style transfer and segmentation
-            img = self.get_stylized(img)
-            img = cv2.resize(img, None, fx=scale, fy=scale, interpolation = cv2.INTER_CUBIC)
+
+            img = cv2.resize(self.img, None, fx=scale, fy=scale, interpolation = cv2.INTER_CUBIC)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             height, width, bpc = img.shape
             bpl = bpc * width

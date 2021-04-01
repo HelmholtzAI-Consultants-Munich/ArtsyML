@@ -62,7 +62,7 @@ def tensor_to_image(tensor):
 
 def get_args():
     parser = argparse.ArgumentParser(description='ArtsyML')
-    parser.add_argument('--style_img', default='./style3.jpg')
+    parser.add_argument('--style_img', default='./images_style/style3.jpg')
     return parser.parse_args()
 
 if __name__ == '__main__':
