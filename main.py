@@ -39,6 +39,23 @@ running = False
 capture_thread = None
 form_class = uic.loadUiType("simple.ui")[0]
 q = queue.Queue()
+
+import threading
+
+class StoppableThread(threading.Thread):
+    """Thread class with a stop() method. The thread itself has to check
+    regularly for the stopped() condition."""
+
+    def __init__(self,  *args, **kwargs):
+        super(StoppableThread, self).__init__(*args, **kwargs)
+        self._stop_event = threading.Event()
+
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
+
  
 def load_img(path_to_img):
   max_dim = 512
@@ -62,17 +79,17 @@ def grab(cam, queue, width, height, fps):
     capture.set(cv2.CAP_PROP_FRAME_WIDTH, width)
     capture.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
     capture.set(cv2.CAP_PROP_FPS, fps)
-    while(True):
-        while(running):
-            frame = {}        
-            capture.grab()
-            retval, img = capture.retrieve(0)
-            frame["img"] = img
 
-            if queue.qsize() < 10:
-                queue.put(frame)
-            else:
-                print(queue.qsize())
+    while(running):
+        frame = {}        
+        capture.grab()
+        retval, img = capture.retrieve(0)
+        frame["img"] = img
+
+        if queue.qsize() < 10:
+            queue.put(frame)
+        else:
+            print(queue.qsize())
 
 def prepare_img(img):
   max_dim = 512
@@ -101,7 +118,7 @@ def tensor_to_image(tensor):
 class OwnImageWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(OwnImageWidget, self).__init__(parent)
-        self.image = None
+        self.image = None # Qtimage
 
     def setImage(self, image):
         self.image = image
@@ -117,20 +134,23 @@ class OwnImageWidget(QtWidgets.QWidget):
         qp.end()
 
 
-
 class MyWindowClass(QtWidgets.QMainWindow, form_class):
     def __init__(self, parent=None):
         QtWidgets.QMainWindow.__init__(self, parent)
         self.setupUi(self)
 
         self.startButton.clicked.connect(self.start_clicked)
+        #self.startButton.setStyleSheet("border-image : url(./images_gui/camera2.png);")
+
         self.screenshotButton.setStyleSheet("border-image : url(./images_gui/imagesRound.jpg);")
         self.screenshotButton.clicked.connect(self.takeScreenshot)
         self.screenshotButton.hide()
+        self.screenshotButton.move(540, 380) 
 
         self.window_width = self.ImgWidget.frameSize().width()
         self.window_height = self.ImgWidget.frameSize().height()
-        self.ImgWidget = OwnImageWidget(self.ImgWidget)       
+        self.ImgWidget = OwnImageWidget(self.ImgWidget)    
+        self.ImgWidget.hide()   
 
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_frame)
@@ -161,9 +181,10 @@ class MyWindowClass(QtWidgets.QMainWindow, form_class):
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
-    
+
     def takeScreenshot(self):
-        mpl.image.imsave('screenshot.png', self.img)
+        cv2.imwrite('screenshot.png', self.img)
+        #mpl.image.imsave('screenshot.png', self.img)
     
     def setStyle1(self):
         self.styleImg = load_img('./images_style/style1.jpg')
@@ -180,18 +201,19 @@ class MyWindowClass(QtWidgets.QMainWindow, form_class):
     def start_clicked(self):
         global running
         if self.startButton.text() == 'Start video':
+            self.capture_thread = StoppableThread(target=grab, args = (0, q, 1920, 1080, 30))
             running = True
-            self.screenshotButton.show()
-            if capture_thread.is_alive():
-                self.screenshotButton.show()
-            else:
-                capture_thread.start()
+            self.capture_thread.start()
             self.startButton.setEnabled(False)
             self.startButton.setText('Starting...')
+            self.ImgWidget.show()
+            self.screenshotButton.show()
         elif self.startButton.text() == 'Stop video':
             running = False
-            self.screenshotButton.hide()
             self.ImgWidget.hide()
+            self.screenshotButton.hide()
+            self.capture_thread.stop()
+            #self.startButton.setStyleSheet("border-image : url(./images_gui/camera2.png);")
             self.startButton.setText('Start video')
 
     def get_stylized(self, frame):
@@ -220,12 +242,15 @@ class MyWindowClass(QtWidgets.QMainWindow, form_class):
         # keep people only from style image and background only from original frame
         style_img =  (1-seg_mask[:,:,None])*frame + seg_mask[:,:,None]*style_img
         style_img = style_img.astype(np.uint8)
+        
         return style_img
 
     def update_frame(self):
         if not q.empty():
-            self.startButton.setEnabled(True)
-            self.startButton.setText('Stop video')
+            if self.startButton.text() == 'Starting...':
+                self.startButton.setEnabled(True)
+                #self.startButton.setStyleSheet("border-image : url(./images_gui/stop_btn.png);")
+                self.startButton.setText('Stop video')
             frame = q.get()
             img = frame["img"]
             # style transfer and segmentation
@@ -250,9 +275,7 @@ class MyWindowClass(QtWidgets.QMainWindow, form_class):
         global running
         running = False
 
-
-
-capture_thread = threading.Thread(target=grab, args = (0, q, 1920, 1080, 30))
+#capture_thread = threading.Thread(target=grab, args = (0, q, 1920, 1080, 30))
 
 app = QtWidgets.QApplication(sys.argv)
 w = MyWindowClass(None)
