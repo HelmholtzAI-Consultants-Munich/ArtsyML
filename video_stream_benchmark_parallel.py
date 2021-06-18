@@ -63,7 +63,7 @@ def tensor_to_image(tensor):
 
 def get_args():
     parser = argparse.ArgumentParser(description='ArtsyML')
-    parser.add_argument('--style_img', default='/home/haicu/ruolin.shen/projects/ArtsyML/pocimage.jpg')
+    parser.add_argument('--style_img', default='/home/haicu/ruolin.shen/projects/ArtsyML/images_style/style1.jpg')
     return parser.parse_args()
 
 def style_model_part(content_image,style_image):
@@ -120,7 +120,7 @@ if __name__ == '__main__':
     gpus = tf.config.list_physical_devices('GPU')
     tf.config.experimental.set_virtual_device_configuration(
         gpus[0],
-        [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024)])
+        [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=10240)])
     style_image = load_img(style_path)
     style_image = tf.stack([style_image[:,:,:,2],style_image[:,:,:,1],style_image[:,:,:,0]],axis = 3)
     style_model = tfhub.load('https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2')
@@ -161,7 +161,7 @@ if __name__ == '__main__':
         seg_mask = r_m[1]
         e = time.time()
 
-        print('paralization time:',e-b)
+        print('parallel time:',e-b)
         
 
         # Preparing the frame for the style net
