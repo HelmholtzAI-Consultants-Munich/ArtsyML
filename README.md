@@ -6,9 +6,9 @@ This repository provides the code for a real time video stream which blends any 
 [add a GIF here] e.g. [Alt Text](https://media.giphy.com/media/vFKqnCdLPNOKc/giphy.gif)
 
 ## Installation:
-The code has been implemented using **Python 3.7**. To install the necessary packages for this framework run:
+The code has been implemented using **Python 3.7**. To install the necessary packages for this framework with conda run:
 ```
-pip install -r requirements.txt
+conda env create -f environment.yaml
 ```
 
 ## How to run?
