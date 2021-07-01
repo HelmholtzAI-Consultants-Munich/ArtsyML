@@ -53,7 +53,13 @@ def tensor_to_image(tensor):
     if np.ndim(tensor)>3:
         assert tensor.shape[0] == 1
         tensor = tensor[0]
-    return tensor #PIL.Image.fromarray(tensor)
+    return tensor 
+
+def combine(content_image,style_image,seg_content_image):
+    style_image_tensor = style_model(content_image, style_image)[0]
+    res = seg_model(seg_content_image)
+    return style_image_tensor,res
+    
 
 def get_args():
     parser = argparse.ArgumentParser(description='ArtsyML')
@@ -65,53 +71,48 @@ if __name__ == '__main__':
 
     args = get_args()
     style_path = args.style_img
-    
     style_image = load_img(style_path)
+    
     style_image = tf.stack([style_image[:,:,:,2],style_image[:,:,:,1],style_image[:,:,:,0]],axis = 3)
     style_model = tfhub.load('https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2')
-#     print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
-
     seg_model = Deeplabv3(backbone='mobilenetv2',input_shape=(288,512,3), OS=16)
+    
+    tf_combine_model = tf.function(combine)
 
-    print('loaded model')
-    cap = cv2.VideoCapture(0)
-    fourcc = cv2.VideoWriter_fourcc('X','V','I','D')
-    videoWriter = cv2.VideoWriter('video.avi', fourcc, 30.0, (288,512))
+    print('model loaded')
+    arr = np.load('/home/haicu/ruolin.shen/projects/ArtsyML/video.npy')
     prev_capture = time.time()
-    while(10):
+    
+    for i in range(10):
         
         capture_time = time.time()
         print('Time between captures: ', capture_time - prev_capture)
         prev_capture = capture_time
 
         # Capture frame-by-frame
-        ret, frame = cap.read()
+        frame = arr[i]
 
         # Preparing the frame for the style net
         content_image = prepare_img(frame)
-        style_image_tensor = style_model(tf.constant(content_image), tf.constant(style_image))[0]
-        style_img = tensor_to_image(style_image_tensor)
+        frame = cv2.resize(frame, (content_image.shape[2], content_image.shape[1]))
+        seg_content_image = np.expand_dims(frame / 127.5 - 1.,0)
+        
+        print(content_image.shape,frame.shape,seg_content_image.shape)
+        style_image_tensor,seg_image_tensor = tf_combine_model(tf.constant(content_image),tf.constant(style_image),tf.constant(seg_content_image))
+        
+#         style_image_tensor = style_model(tf.constant(content_image), tf.constant(style_image))[0]
 
-        # Preparing the frame for the segmentation net 
-        frame = cv2.resize(frame, (style_img.shape[1], style_img.shape[0]))
-        resized = frame / 127.5 - 1.
-        res = seg_model.predict(np.expand_dims(resized,0))
-        seg_mask = np.argmax(res.squeeze(),-1).astype(np.uint8)
+        style_img = tensor_to_image(style_image_tensor)
+        seg_mask = np.argmax(np.array(seg_image_tensor).squeeze(),-1).astype(np.uint8)
         seg_mask[seg_mask==15] = 1
     
 
         # keep people only from style image and background only from original frame
         style_img =  (1-seg_mask[:,:,None])*frame + seg_mask[:,:,None]*style_img
         style_img = style_img.astype(np.uint8)
+        print(' ')
 
-        # Display the resulting frame
-        cv2.imshow('Style Transfer', style_img)
-        videoWriter.write(style_img)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-    # When everything done, release the capture
-    cap.release()
-    cv2.destroyAllWindows()
+
 
 
 
