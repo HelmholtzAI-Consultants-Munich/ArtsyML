@@ -2,7 +2,6 @@ import os
 import argparse
 import cv2 # used for resize. if you dont have it, use anything else
 import numpy as np
-from model import Deeplabv3
 import tensorflow as tf
 import tensorflow_hub as tfhub
 # Load compressed models from tensorflow_hub
