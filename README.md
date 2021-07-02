@@ -13,8 +13,6 @@ conda env create -f environment.yaml
 
 ## How to run?
 
-## How to run?
-
 To start the video stream, simply open a terminal and type:
 ```
 python video_stream.py
