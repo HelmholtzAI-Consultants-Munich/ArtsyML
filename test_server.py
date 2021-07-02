@@ -31,7 +31,7 @@ def load_img(path_to_img):
     img = img[tf.newaxis, :]
     return img
 
-def prepare_img(img):
+def prepare_img_style(img):
     max_dim = 512
     img = tf.convert_to_tensor(img)
     #img = tf.image.decode_image(img, channels=3)
@@ -47,6 +47,13 @@ def prepare_img(img):
     img = img[tf.newaxis, :]
     return img
 
+def prepare_img_seg(img):
+    seg_content_image = np.expand_dims(img / 127.5 - 1., 0)
+    seg_content_image = tf.transpose(seg_content_image, perm=[0, 3, 1, 2])
+    seg_content_image = tf.convert_to_tensor(seg_content_image)
+    seg_content_image = tf.image.convert_image_dtype(seg_content_image, tf.float32)
+    return seg_content_image
+
 def tensor_to_image(tensor):
     tensor = tensor*255
     tensor = np.array(tensor, dtype=np.uint8)
@@ -57,7 +64,7 @@ def tensor_to_image(tensor):
 
 def combine(content_image,style_image,seg_content_image):
     style_image_tensor = style_model(content_image, style_image)[0]
-    res = seg_model(seg_content_image)
+    res = seg_model(**{'input.1': seg_content_image})[0]
     return style_image_tensor,res
     
 
@@ -75,7 +82,7 @@ if __name__ == '__main__':
     
     style_image = tf.stack([style_image[:,:,:,2],style_image[:,:,:,1],style_image[:,:,:,0]],axis = 3)
     style_model = tfhub.load('https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2')
-    seg_model = Deeplabv3(backbone='mobilenetv2',input_shape=(288,512,3), OS=16)
+    seg_model = tf.saved_model.load('tf_deeplabv3.pb') #Deeplabv3(backbone='mobilenetv2',input_shape=(288,512,3), OS=16)
     
     tf_combine_model = tf.function(combine)
 
@@ -93,19 +100,17 @@ if __name__ == '__main__':
         frame = arr[i]
 
         # Preparing the frame for the style net
-        content_image = prepare_img(frame)
+        content_image = prepare_img_style(frame)
         frame = cv2.resize(frame, (content_image.shape[2], content_image.shape[1]))
-        seg_content_image = np.expand_dims(frame / 127.5 - 1.,0)
-        
+        seg_content_image = prepare_img_seg(frame)
+
         print(content_image.shape,frame.shape,seg_content_image.shape)
         style_image_tensor,seg_image_tensor = tf_combine_model(tf.constant(content_image),tf.constant(style_image),tf.constant(seg_content_image))
         
-#         style_image_tensor = style_model(tf.constant(content_image), tf.constant(style_image))[0]
-
-        style_img = tensor_to_image(style_image_tensor)
-        seg_mask = np.argmax(np.array(seg_image_tensor).squeeze(),-1).astype(np.uint8)
+        style_img = tensor_to_image(style_image_tensor)    
+        seg_mask = np.array(tf.argmax(seg_image_tensor, axis=1)[0,:,:]) # model returns a list ['out', 'aux'], 'aux' only used during training
+        seg_mask[seg_mask!=15] = 0
         seg_mask[seg_mask==15] = 1
-    
 
         # keep people only from style image and background only from original frame
         style_img =  (1-seg_mask[:,:,None])*frame + seg_mask[:,:,None]*style_img
