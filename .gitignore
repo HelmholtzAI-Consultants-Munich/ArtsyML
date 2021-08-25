@@ -1,3 +1,7 @@
+__pycache__/
 .DS_Store
 requirements_old.txt
+environment2.yaml
+video.avi
+tf_deeplabv3.pb/
 video_stream_blended.py
