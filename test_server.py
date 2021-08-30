@@ -85,7 +85,7 @@ if __name__ == '__main__':
     
     # load video to simulate cam reading
     arr = np.load('video.npy') 
-    frame_dim1, frame_dim2 = (arr[0].shape[1], arr[0].shape[2])  #(360, 640) #(720, 1280) #(1080, 1920)
+    frame_dim1, frame_dim2 = (arr[0].shape[0], arr[0].shape[1])  #(360, 640) #(720, 1280) #(1080, 1920)
     
     first_time = time.time()
     prev_capture = time.time()
