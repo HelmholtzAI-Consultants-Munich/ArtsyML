@@ -8,7 +8,7 @@ This repository provides the code for a real time video stream which blends any 
 ## Installation:
 The code has been implemented using **Python 3.7**. To install the necessary packages for this framework with conda run:
 ```
-conda env create -f environment.yaml
+pip install -r requirements.txt
 ```
 
 ## How to run?
