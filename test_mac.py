@@ -74,8 +74,7 @@ if __name__ == '__main__':
     style_image = load_img(style_path)
     
     style_image = tf.stack([style_image[:,:,:,2],style_image[:,:,:,1],style_image[:,:,:,0]],axis = 3)
-    style_model = tfhub.load('https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2')
-    
+    style_model = tfhub.load('https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2')    
     seg_sizes = (288,512,3)
     seg_model = Deeplabv3(backbone='mobilenetv2', input_shape=seg_sizes, OS=16)
     
@@ -99,34 +98,38 @@ if __name__ == '__main__':
         # Capture frame-by-frame
         _, frame = cap.read()
         frame = frame.astype(np.uint8)
-        
+
         frame_resized = cv2.resize(frame, (seg_sizes[1], seg_sizes[0]))
         seg_content_image = np.expand_dims(frame_resized / 127.5 - 1.,0)
-        
+
         # Preparing the frame for the style net
-        content_image = tf.convert_to_tensor(frame_resized)
-        content_image = prepare_img_style(content_image) #, frame_dim2)
-        '''
-        if i==0:
-            print('SIZES', content_image.shape, style_image.shape, seg_content_image.shape)
-        '''
+        frame_tensor = tf.convert_to_tensor(frame_resized)
+        content_image = prepare_img_style(frame_tensor) #, frame_dim2)
+
+        tik = time.time()
+        #print('preprocessing time: ',tik-prev_capture)
 
         style_image_tensor,seg_image_tensor = tf_combine_model(tf.constant(content_image),tf.constant(style_image),tf.constant(seg_content_image))
-        
-        style_image_tensor = tf.image.resize(style_image_tensor, (frame.shape[0], frame.shape[1]))
-        stylized_img = tensor_to_image(style_image_tensor)        
-            
+
+        tok = time.time()
+        print('inference time: ',tok-tik)
+
+        style_image_tensor = tf.image.resize(style_image_tensor, (frame.shape[0], frame.shape[1])) 
+        style_image_tensor = tf.squeeze(style_image_tensor, [0])*255 
         seg_image_tensor = tf.argmax(seg_image_tensor, axis=3)
-        seg_mask = np.array(seg_image_tensor[0,:,:]) #, dtype=np.uint8)
-        seg_mask[seg_mask!=15] = 0
-        seg_mask[seg_mask==15] = 1
-        seg_mask = cv2.resize(seg_mask.astype(np.uint8), (frame.shape[1], frame.shape[0]), interpolation=cv2.INTER_NEAREST)
-        seg_mask = seg_mask[:,:,None].astype(np.uint8)
-        
-        # keep people only from style image and background only from original frame
-        stylized_img =  (1-seg_mask)*frame + seg_mask*stylized_img
-        #stylized_img = cv2.resize(stylized_img, (frame_dim2, frame_dim1))
-        cv2.imshow('Style Transfer', stylized_img)
+        seg_mask = tf.math.equal(seg_image_tensor,15) 
+        seg_mask = tf.dtypes.cast(tf.stack([seg_mask] * 3, axis=-1), tf.float32)
+        seg_mask = tf.image.resize(seg_mask, (frame.shape[0], frame.shape[1]))     
+        seg_mask = tf.squeeze(seg_mask[0])
+
+        #stylized_img = seg_mask*style_image_tensor+(1-seg_mask)*frame
+        stylized_img = seg_mask*style_image_tensor+(1-seg_mask)*tf.cast(tf.convert_to_tensor(frame), tf.float32)
+        stylized_img = stylized_img.numpy() #tf.make_ndarray(stylized_img) # np.array(stylized_img)
+        tik = time.time()
+        print('postprocessing time: ',tik-tok)
+        print(' ')
+
+        cv2.imshow('Style Transfer', stylized_img.astype(np.uint8))
         #videoWriter.write(style_img)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
