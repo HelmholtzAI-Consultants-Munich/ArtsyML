@@ -13,17 +13,12 @@ class ArtsyML():
         self.seg_shape = seg_shape
 
         self.style_model = tfhub.load('https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2')    
+        self.create_model(style_image_file)
+
+
+
+    def create_model(self, style_image_file):
         self.style_image_abspath = os.path.abspath(style_image_file)
-        self.read_style_image()
-
-        self.seg_model = Deeplabv3(
-            backbone = 'mobilenetv2', 
-            input_shape = self.seg_shape, 
-            OS=16
-        )
-        self.tf_combine_model = tf.function(self.combine)
-
-    def read_style_image(self):
         _style_image = load_img(self.style_image_abspath)
         self.style_image = tf.stack([
                 _style_image[:,:,:,2],
@@ -32,6 +27,13 @@ class ArtsyML():
             ],
             axis = 3
         )
+        
+        self.seg_model = Deeplabv3(
+            backbone = 'mobilenetv2', 
+            input_shape = self.seg_shape, 
+            OS=16
+        )
+        self.tf_combine_model = tf.function(self.combine)
 
     def combine(self, content_image, seg_content_image):
         style_image_tensor = self.style_model(content_image, self.style_image)[0]

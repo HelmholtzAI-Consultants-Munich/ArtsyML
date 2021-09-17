@@ -9,7 +9,7 @@ This repository provides the code for a real time video stream which blends any 
 
 ## tf-packaging branch
 
-The version of code in this branch is made based on the "tf" branch in which the pytorch segmentation model was replaced by a tensorflow model in order to increase performance and subsequently to increase the framerate in video stream. The main change in "tf-packaging" branch in comparison with "tf" is that a new class "ArtsyML" is defined in order to store all models and apply the styling.
+The version of code in this branch is made based on the "tf" branch in which the pytorch segmentation model was replaced by a tensorflow model in order to increase performance and subsequently to increase the framerate in video stream. The main change in "tf-packaging" branch in comparison with "tf" is that a new class "ArtsyML" is defined in order to store all models and apply the styling. The code is also minimized by removing all GUI tools since we are providing additional Flask-webpage to host the graphical interface for the user.
 
 ## Installation:
 
@@ -35,6 +35,38 @@ To stop the video stream at any time the user can press the 'q' key on the keybo
 ```console
 python video_stream.py --style_img tryout.jpg [rename these images]
 ```
+## API:
+The API includes only one class, "ArtsyML". An instance of the class is initiated by a given style image and then segmentaiotn and styling combined model is stored as a method.
+
+**artsyml.ArtsyML(style_image_file, frame_shape = (720, 1280), seg_shape = (288,512,3)))**
+
+* `style_image_file`: str
+
+    Path to a style image.
+
+* `frame_shape`: tuple
+
+    Shape of the output frame
+
+* `seg_shape`: tuple
+
+    Shape of the segmentation model
+
+### artsyml.ArtsyML atrributes and methods:
+**artsyml.ArtsyML.style_image_abspath**
+
+    Gives the absolute path to the style image
+
+**artsyml.ArtsyML.create_model(style_image_file: str)**
+
+    Creates a combined model for segmentation and styling for a given style image "style_image_file". The method is internally called during initiation of an instance. Thus it is only needed to be called for changing the style image.
+
+ **artsyml.ArtsyML.apply_style(frame: numpy.ndarray)**   
+
+    Gets a frame as an input image with type of numpy.ndarray returns a styled frame with type of numpy.ndarray.
+
+
+
 
 ## How does this work?
 
