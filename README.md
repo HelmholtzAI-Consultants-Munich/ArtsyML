@@ -19,7 +19,7 @@ The code has been implemented using **Python 3.7+**. To install the necessary pa
 ```console
 $ python3 -m venv .venv_artsyml
 $ source .venv_artsyml/bin/activate(.venv_artsyml) 
-$ pip3 install -e .
+(.venv_artsyml) $ pip3 install -e .
 ```
 
 ## How to run?
@@ -33,7 +33,7 @@ To stop the video stream at any time the user can press the 'q' key on the keybo
 
 
 ```console
-python video_stream.py --style_img tryout.jpg [rename these images]
+(.venv_artsyml) $ python video_stream.py --style_img tryout.jpg [rename these images]
 ```
 ## API:
 The API includes only one class, "ArtsyML". An instance of the class is initiated by a given style image and then segmentaiotn and styling combined model is stored as a method.
@@ -46,17 +46,17 @@ The API includes only one class, "ArtsyML". An instance of the class is initiate
 
 * `frame_shape`: tuple
 
-    Shape of the output frame
+    Shape of the output frame.
 
 * `seg_shape`: tuple
 
-    Shape of the segmentation model
+    Shape of the segmentation model.
 
 ### artsyml.ArtsyML atrributes and methods:
 
 * `artsyml.ArtsyML.style_image_abspath`
 
-    Gives the absolute path to the style image
+    Gives the absolute path to the style image.
 
 * `artsyml.ArtsyML.create_model(style_image_file: str)`
 
