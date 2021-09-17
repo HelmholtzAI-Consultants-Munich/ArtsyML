@@ -54,15 +54,15 @@ The API includes only one class, "ArtsyML". An instance of the class is initiate
 
 ### artsyml.ArtsyML atrributes and methods:
 
-* artsyml.ArtsyML.style_image_abspath
+* `artsyml.ArtsyML.style_image_abspath`
 
     Gives the absolute path to the style image
 
-* artsyml.ArtsyML.create_model(style_image_file: str)
+* `artsyml.ArtsyML.create_model(style_image_file: str)`
 
-    Creates a combined model for segmentation and styling for a given style image "style_image_file". The method is internally called during initiation of an instance. Thus it is only needed to be called for changing the style image.
+    Creates a combined model for segmentation and styling for a given style image `style_image_file`. The method is internally called during initiation of an instance. Thus it is only needed to be called for changing the style image.
 
-* artsyml.ArtsyML.apply_style(frame: numpy.ndarray)  
+* `artsyml.ArtsyML.apply_style(frame: numpy.ndarray)`
 
     Gets a frame as an input image with type of numpy.ndarray returns a styled frame with type of numpy.ndarray.
 
