@@ -1,11 +1,8 @@
 import os
+os.environ['TFHUB_MODEL_LOAD_FORMAT'] = 'COMPRESSED'
 import cv2 # used for resize. if you dont have it, use anything else
 import numpy as np
 import argparse
-os.environ['TFHUB_MODEL_LOAD_FORMAT'] = 'COMPRESSED'
-import matplotlib as mpl
-mpl.rcParams['figure.figsize'] = (12,12)
-mpl.rcParams['axes.grid'] = False
 import time
 from artsyml import ArtsyML
 
