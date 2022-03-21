@@ -22,6 +22,8 @@ $ source .venv_artsyml/bin/activate(.venv_artsyml)
 (.venv_artsyml) $ pip3 install -e .
 ```
 
+To install create a new conda environment (has been tested with **Python 3.7, 3.9.+**) and from within it run: ```bash install.sh```
+
 ## How to run?
 To start the video stream, simply open a terminal, activate the virtual environment type:
 
