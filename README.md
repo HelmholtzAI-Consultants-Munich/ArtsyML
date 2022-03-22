@@ -4,7 +4,7 @@
 
 This repository provides the code for a real time video stream which blends any people in the image with a biological image. The result can look sotheing like the example below:
 
-[add a GIF here] e.g. [Alt Text](https://media.giphy.com/media/vFKqnCdLPNOKc/giphy.gif)
+![Alt Text](https://github.com/HelmholtzAI-Consultants-Munich/ArtsyML/blob/remotes/origin/tf-packaging/demo.gif)
 
 
 ## tf-packaging branch
@@ -21,6 +21,8 @@ $ python3 -m venv .venv_artsyml
 $ source .venv_artsyml/bin/activate(.venv_artsyml) 
 (.venv_artsyml) $ pip3 install -e .
 ```
+
+To install create a new conda environment (has been tested with **Python 3.7, 3.9.+**) and from within it run: ```bash install.sh```
 
 ## How to run?
 To start the video stream, simply open a terminal, activate the virtual environment type:
