@@ -1,4 +1,4 @@
-git clone https://github.com/tensorflow/models.git
+git submodule add https://github.com/tensorflow/models.git models
 cd models/research
 # Compile protos.
 protoc object_detection/protos/*.proto --python_out=.
