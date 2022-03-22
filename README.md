@@ -4,7 +4,7 @@
 
 This repository provides the code for a real time video stream which blends any people in the image with a biological image. The result can look sotheing like the example below:
 
-[add a GIF here](https://github.com/HelmholtzAI-Consultants-Munich/ArtsyML/blob/remotes/origin/tf-packaging/demo.gif)
+![Alt Text](https://github.com/HelmholtzAI-Consultants-Munich/ArtsyML/blob/remotes/origin/tf-packaging/demo.gif)
 
 
 ## tf-packaging branch
