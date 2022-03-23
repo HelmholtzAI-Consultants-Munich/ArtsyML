@@ -2,7 +2,7 @@
 
 ## What is this?
 
-This repository provides the code for a real time video stream which blends any people in the image with a biological image. The result can look sotheing like the example below:
+This repository provides the code for a real time video stream which blends any people in the image with a biological image using style transfer. The result can look like the example below:
 
 ![Alt Text](https://github.com/HelmholtzAI-Consultants-Munich/ArtsyML/blob/remotes/origin/tf-packaging/demo.gif)
 
@@ -67,11 +67,14 @@ The example above will only apply the style transfer between frames 10 and 100 w
 ## API:
 The API includes only one class, "ArtsyML". An instance of the class is initiated by a given style image and then segmentaiotn and styling combined model is stored as a method.
 
-**artsyml.ArtsyML(style_image_file, frame_shape = (720, 1280), seg_shape = (288,512,3)))**
+**artsyml.ArtsyML(style_image_file, which_seg_model='Deeplabv3', frame_shape = (720, 1280), seg_shape = (288,512,3)))**
 
 * `style_image_file`: str
 
     Path to a style image.
+    
+* 'which_seg_model': str
+    To chose a segmentation model to detect humans.
 
 * `frame_shape`: tuple
 
