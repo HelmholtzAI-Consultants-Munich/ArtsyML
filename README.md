@@ -18,8 +18,8 @@ The code has been implemented using **Python 3.7+**. To install the necessary pa
 
 ```console
 $ python3 -m venv .venv_artsyml
-$ source .venv_artsyml/bin/activate(.venv_artsyml) 
-(.venv_artsyml) $ pip3 install -e .
+$ source .venv_artsyml/bin/activate
+(.venv_artsyml) $ bash install.sh
 ```
 
 To install create a new conda environment (has been tested with **Python 3.7, 3.9.+**) and from within it run: ```bash install.sh```
@@ -28,14 +28,14 @@ To install create a new conda environment (has been tested with **Python 3.7, 3.
 To start the video stream, simply open a terminal, activate the virtual environment type:
 
 ```console
-(.venv_artsyml) $ python3 video_stream.py
+(.venv_artsyml) $ python3 run_video_stream.py
 ```
 
 To stop the video stream at any time the user can press the 'q' key on the keyboard. If no other argument is provided the script uses by default _pocimage.jpg_ as the style image. To provide a different style image, add it as an argument, e.g.:
 
 
 ```console
-(.venv_artsyml) $ python video_stream.py --style_img tryout.jpg [rename these images]
+(.venv_artsyml) $ python run_video_stream.py --style_img tryout.jpg [rename these images]
 ```
 ## API:
 The API includes only one class, "ArtsyML". An instance of the class is initiated by a given style image and then segmentaiotn and styling combined model is stored as a method.
