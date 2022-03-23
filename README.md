@@ -25,6 +25,10 @@ $ source .venv_artsyml/bin/activate
 To install create a new conda environment (has been tested with **Python 3.7, 3.9.+**) and from within it run: ```bash install.sh```
 
 ## How to run?
+
+The ArtsyML package offers three options to users: running the style transfer live on a webcam output, running the style transfer on a single or multiple images and running the style transfer on a video. 
+
+### Running on a webcam output
 To start the video stream, simply open a terminal, activate the virtual environment type:
 
 ```console
@@ -33,10 +37,33 @@ To start the video stream, simply open a terminal, activate the virtual environm
 
 To stop the video stream at any time the user can press the 'q' key on the keyboard. If no other argument is provided the script uses by default _pocimage.jpg_ as the style image. To provide a different style image, add it as an argument, e.g.:
 
-
 ```console
 (.venv_artsyml) $ python run_video_stream.py --style_img tryout.jpg [rename these images]
 ```
+### Running on images
+To run ArtsyML on a single or multiple images,  simply open a terminal, activate the virtual environment type:
+
+```console
+(.venv_artsyml) $ python3 run_on_img.py --image your-image-path
+```
+
+The ```your-image-path``` variable can either be a directory where the images you want to transform are stored or the file path to a single image
+
+
+### Running on a video
+To run ArtsyML on a single or multiple images,  simply open a terminal, activate the virtual environment type:
+
+```console
+(.venv_artsyml) $ python3 run_on_img.py --video-file your-video-path
+```
+where ```your-video-path``` points to the file path of the video.
+
+This will apply style transfer with ArtsyML on the entire video. If you wish to only apply the style transfer on a part of the video then type:
+```console
+(.venv_artsyml) $ python3 run_on_img.py --video-file your-video-path --start-frame 10 --end-frame 100
+```
+The example above will only apply the style transfer between frames 10 and 100 while leaving the rest of the frames untouched.
+
 ## API:
 The API includes only one class, "ArtsyML". An instance of the class is initiated by a given style image and then segmentaiotn and styling combined model is stored as a method.
 
@@ -69,13 +96,11 @@ The API includes only one class, "ArtsyML". An instance of the class is initiate
     Gets a frame as an input image with type of numpy.ndarray returns a styled frame with type of numpy.ndarray.
 
 
-
-
 ## How does this work?
 
-The main script of this repository is ```video_stream.py```. In this script the webcam of the user is accessed and the webacam's frames are successively processed and displayed. The processing involves three steps:
+Similar steps are performed in all three script of this repository (```run_on_img.py```, ```run_on_video.py``` and ```run_video_stream.py```).Here we describe the process followed in ```run_video_stream.py```. In this script the webcam of the user is accessed and the webcam's frames are successively processed and displayed. The processing involves three steps:
 
 1. The current frame is blended with a style image, using the approach suggested in [Neural style transfer](https://www.tensorflow.org/tutorials/generative/style_transfer).
-2. The current frame is segmented using ```deeplabv3_resnet101``` and the output masks is then converted to binary where only humans in the image are segmented.
+2. The current frame is segmented using either ```deeplabv3_resnet101``` or ```Mask-RCNN``` and the output masks is then converted to binary where only humans in the image are segmented. By default ```deeplabv3_resnet101``` is used for the ```run_video_stream.py``` script as it is much faster than ```Mask-RCNN```, whereas ```Mask-RCNN``` is used for ```run_on_img.py``` and ```run_on_video.py``` as it is generally more accurate. These configurations can be changed by changing the ```which_seg_model``` attribute of the ```ArtsyML``` class.
 3. The outputs of the two previous steps are merged so that the output of the style net (step 1) is only aplied on the detected humans (from step 2). 
 
