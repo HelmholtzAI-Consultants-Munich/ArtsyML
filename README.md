@@ -19,10 +19,10 @@ The code has been implemented using **Python 3.7+**. To install the necessary pa
 ```console
 $ python3 -m venv .venv_artsyml
 $ source .venv_artsyml/bin/activate
-(.venv_artsyml) $ bash install.sh
+(.venv_artsyml) $ bash install_{cpu | gpu}.sh
 ```
 
-To install create a new conda environment (has been tested with **Python 3.7, 3.9.+**) and from within it run: ```bash install.sh```
+Dependind on whether you have a GPU available or not, in the last line you should run ```install_gpu.sh``` or ```install_cpu.sh```
 
 ## How to run?
 
